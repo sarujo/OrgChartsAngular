@@ -1,0 +1,9 @@
+<app-org-chart
+  [orgChartData]="orgDataInputed"
+  (selectedData)="onSelectedData($event)"
+></app-org-chart>
+<br /><br /><br /><br /><br />
+<app-org-data-input
+  [orgChartData]="orgDataInputed"
+  [selected]="selected"
+></app-org-data-input>

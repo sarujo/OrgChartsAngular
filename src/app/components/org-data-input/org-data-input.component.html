@@ -1,0 +1,128 @@
+<button (click)="addNewOwner()">Add new Owner</button><br /><br />
+<form [formGroup]="myForm" (ngSubmit)="onSubmit()">
+  <button type="submit" style="background-color:green; color:white">
+    SUBMIT
+  </button>
+  <button
+    (click)="clearMessages()"
+    class="btn btn-secondary"
+    style="margin-left:10px"
+  >
+    Reset Data
+  </button>
+  <div formArrayName="owners">
+    <!-- STOP -->
+    <div *ngFor="let owner of myForm.get('owners').controls; let i = index">
+      <fieldset>
+        <legend>
+          <h3>OWNER {{ i + 1 }}:</h3>
+        </legend>
+        <!-- [ngStyle]="{
+          'background-color':
+            owner.controls.id.value == selected ? 'yellow' : 'white'
+        }" -->
+        <div
+          *ngIf="owner.controls.id.value == selected"
+          [ngStyle]="{
+            'background-color':
+              owner.controls.id.value == selected ? '#edf7ff' : 'white'
+          }"
+        >
+          <div [formGroupName]="i">
+            <label>Owner Name: </label>
+            <input formControlName="name" style="width: 200px" /><span
+              ><button (click)="deleteOwner(i)">Delete Owner</button></span
+            >
+            <div formArrayName="ownerOf">
+              <div
+                *ngFor="
+                  let ownerOfItem of owner.get('ownerOf').controls;
+                  let j = index
+                "
+              >
+                <fieldset>
+                  <legend>
+                    <h4>OWNER OF</h4>
+                  </legend>
+                  <div [formGroupName]="j">
+                    <label>External Customer Key: </label>
+                    <input formControlName="externalCustomerKey" />
+                    <div
+                      *ngIf="ownerOfItem.controls.externalCustomerKey.errors"
+                      style="color:red"
+                    >
+                      <div
+                        *ngIf="
+                          ownerOfItem.controls.externalCustomerKey.errors
+                            .required
+                        "
+                      >
+                        External Customer Key is required
+                      </div>
+                      <div
+                        *ngIf="
+                          ownerOfItem.controls.externalCustomerKey.errors
+                            .invalidKey
+                        "
+                      >
+                        There is no unit with this External Customer Key
+                      </div>
+                    </div>
+                    <!-- <span
+                    ><button (click)="deleteRelation(comp.controls.ownerOf, j)">
+                      Delete Relation
+                    </button></span
+                  > -->
+                    <br />
+                    <br />
+                    <div>
+                      <label>Ownership type: </label>
+                      <input formControlName="ownershipType" />
+                    </div>
+                    <br />
+                    <br />
+                    <div>
+                      <label>Ownership percentage: </label>
+                      <input formControlName="ownershipPercentage" />
+                    </div>
+                    <br />
+                    <br />
+                    <div>
+                      <label>Voting rights percentage: </label>
+                      <input formControlName="votingRightsPercentage" />
+                    </div>
+                  </div>
+                  <!-- <button
+                    (click)="addNewRelation(ownerOfItem.controls.ownerOf)"
+                  >
+                    Add new Relation
+                  </button> -->
+                </fieldset>
+              </div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <br />
+  <button type="submit" style="background-color:green; color:white">
+    SUBMIT
+  </button>
+  <button
+    (click)="clearMessages()"
+    class="btn btn-secondary"
+    style="margin-left:10px"
+  >
+    Reset Data!
+  </button>
+</form>
+
+<pre>{{ myForm.value | json }}</pre>
+
+<!-- <h2>Angular 7 Component Communication</h2>
+<button (click)="sendMessage()" class="btn btn-primary">Submit Data</button>
+<button (click)="clearMessages()" class="btn btn-secondary">
+  Reset Data
+</button>
+-->
