@@ -27,6 +27,7 @@ interface Owners {
 }
 
 interface Base {
+  id?: string;
   companyName: string;
   externalCustomerKey: string;
 }

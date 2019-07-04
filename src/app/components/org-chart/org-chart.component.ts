@@ -47,9 +47,11 @@ export class OrgChartComponent implements OnChanges, OnInit {
   setOrgChartData(orgChartData: any) {
     return orgChartData.owners.map(item => [
       {
-        v: item.name,
+        v: item.id,
         f:
-          '<div style="font-weight:bold">' +
+          '<div id="' +
+          item.id +
+          '" style="font-weight:bold">' +
           item.ownerOf[0].ownershipPercentage +
           '%' +
           '<span style="font-weight:normal">' +
@@ -64,7 +66,7 @@ export class OrgChartComponent implements OnChanges, OnInit {
           this.getSecondaryOwner(item.ownerOf[1]) +
           '<div>Owner of ' +
           item.ownerOf[0].externalCustomerKey +
-          '</div>',
+          '</div></div>',
       },
       this.getName(orgChartData, item.ownerOf[0].externalCustomerKey),
       '',
@@ -77,7 +79,7 @@ export class OrgChartComponent implements OnChanges, OnInit {
       item => item.externalCustomerKey === externalCustomerKey,
     );
     // bc3494 check in owners, if not found in baseName, else no good news
-    const nameOfOwned = namesOfOwned[0] ? namesOfOwned[0].name : baseName;
+    const nameOfOwned = namesOfOwned[0] ? namesOfOwned[0].id : baseName;
     return nameOfOwned;
   }
 
@@ -97,7 +99,29 @@ export class OrgChartComponent implements OnChanges, OnInit {
   }
 
   onSelect(event: ChartEvent) {
-    console.log('nice event:');
-    this.selectedData.emit(this.orgChartData.owners[event[0].row].id);
+    if (event[0] === undefined) {
+      this.orgChartData.owners.map(item =>
+        document
+          .getElementById(item.id)
+          .parentElement.classList.remove(
+            'google-visualization-orgchart-nodesel',
+          ),
+      );
+    } else {
+      this.orgChartData.owners.map(owner =>
+        owner.name === this.orgChartData.owners[event[0].row].name
+          ? (document.getElementById(owner.id).parentElement.className +=
+              ' google-visualization-orgchart-nodesel')
+          : document
+              .getElementById(owner.id)
+              .parentElement.classList.remove(
+                'google-visualization-orgchart-nodesel',
+              ),
+      );
+    }
+
+    const selection =
+      event[0] !== undefined ? this.orgChartData.owners[event[0].row].id : null;
+    this.selectedData.emit(selection);
   }
 }
