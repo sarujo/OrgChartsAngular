@@ -19,109 +19,173 @@ export class OrgChartComponent implements OnChanges, OnInit {
   @Input() orgChartData: OrgChartDTO;
   @Input() selected: string;
   @Output() selectedData = new EventEmitter<string>();
+  orgChartRemapedData: any = [];
   constructor() {}
 
   title = '';
   type = 'OrgChart';
   columnNames = ['Name', 'Manager', 'Tooltip'];
-  dataOrgChart = '';
+  dataOrgChart = {};
   options = {
     allowHtml: true,
   };
   width = 550;
   height = 400;
 
+  getName(data: any, externalCustomerKey: string): any {
+    const baseName = 'Danske'; // data.base.companyName;
+    const namesOfOwned = data.filter(
+      item => item.owner.externalCustomerKey === externalCustomerKey,
+    );
+    console.log('-----------------');
+    console.log(data);
+    console.log(namesOfOwned);
+    // bc3494 check in owners, if not found in baseName, else no good news
+    const nameOfOwned =
+      (namesOfOwned[0] &&
+        namesOfOwned[0].owner.id +
+          namesOfOwned[0].ownerOf.externalCustomerKey) ||
+      baseName;
+    console.log(nameOfOwned);
+    return nameOfOwned;
+  }
+
+  testFunction = (data: any, getName: any) => {
+    return new Promise((resolve, reject) =>
+      resolve(
+        data.map(item => [
+          {
+            v: item.owner.id + item.ownerOf.externalCustomerKey,
+            f:
+              '<div id="' +
+              item.owner.id +
+              item.ownerOf.externalCustomerKey +
+              '" style="font-weight:bold">' +
+              item.ownerOf.ownershipPercentage +
+              '%' +
+              '<span style="font-weight:normal">' +
+              item.owner.name +
+              '</span>' +
+              '<div style="font-weight:bold">' +
+              item.owner.customerType +
+              '</div>' +
+              '<div style="color:red; font-style:italic">' +
+              item.ownerOf.ownershipType +
+              '</div>',
+          },
+          getName(data, item.ownerOf.externalCustomerKey),
+          '',
+        ]),
+      ),
+    );
+  };
+
   ngOnInit() {
     console.log('ORG_CHART INIT');
-    console.log(this.orgChartData);
 
-    this.dataOrgChart = this.setOrgChartData(this.orgChartData);
+    this.orgChartData.owners.map(owner =>
+      owner.ownerOf.map(unit =>
+        this.orgChartRemapedData.push({ owner: owner, ownerOf: unit }),
+      ),
+    ),
+      console.log(this.orgChartRemapedData);
+
+    // this.dataOrgChart = this.setOrgChartData(this.orgChartRemapedData);
+    console.log('PRE');
+    this.testFunction(this.orgChartRemapedData, this.getName)
+      .then(data => {
+        this.dataOrgChart = data;
+      })
+      .then(() => console.log('DONE +++++ ++++ ++++'));
   }
 
   ngOnChanges(changes: SimpleChanges) {
     console.log('CHANGED in ORG-CHART');
     console.log(changes);
-    this.dataOrgChart = this.setOrgChartData(this.orgChartData);
+    const orgChartRemapedData = [];
+
+    this.orgChartData.owners.map(owner =>
+      owner.ownerOf.map(unit =>
+        orgChartRemapedData.push({ owner: owner, ownerOf: unit }),
+      ),
+    ),
+      console.log(orgChartRemapedData);
+
+    // this.dataOrgChart = this.setOrgChartData(orgChartRemapedData);
+    console.log('PRE CHANGED');
+    this.testFunction(orgChartRemapedData, this.getName)
+      .then(data => {
+        console.log('|||||||||||');
+        console.log(data);
+        this.dataOrgChart = data;
+      })
+      .then(() => {
+        const elm = document.getElementById('google-chart');
+        const value = elm.innerHTML;
+        const objToSend = JSON.stringify(value);
+        console.log('=========');
+        console.log(objToSend);
+        console.log('=========');
+      });
   }
 
-  setOrgChartData(orgChartData: any) {
-    return orgChartData.owners.map(item => [
+  setOrgChartData(data: any) {
+    return data.map(item => [
       {
-        v: item.id,
+        v: item.owner.id + item.ownerOf.externalCustomerKey,
         f:
           '<div id="' +
-          item.id +
+          item.owner.id +
+          item.ownerOf.externalCustomerKey +
           '" style="font-weight:bold">' +
-          item.ownerOf[0].ownershipPercentage +
+          item.ownerOf.ownershipPercentage +
           '%' +
           '<span style="font-weight:normal">' +
-          item.name +
+          item.owner.name +
           '</span>' +
           '<div style="font-weight:bold">' +
-          item.customerType +
+          item.owner.customerType +
           '</div>' +
           '<div style="color:red; font-style:italic">' +
-          item.ownerOf[0].ownershipType +
-          '</div>' +
-          this.getSecondaryOwner(item.ownerOf[1]) +
-          '<div>Owner of ' +
-          item.ownerOf[0].externalCustomerKey +
-          '</div></div>',
+          item.ownerOf.ownershipType +
+          '</div>',
       },
-      this.getName(orgChartData, item.ownerOf[0].externalCustomerKey),
+      this.getName(data, item.ownerOf.externalCustomerKey),
       '',
     ]);
   }
 
-  getName(data: OrgChartDTO, externalCustomerKey: string): any {
-    const baseName = data.base.companyName;
-    const namesOfOwned = data.owners.filter(
-      item => item.externalCustomerKey === externalCustomerKey,
-    );
-    // bc3494 check in owners, if not found in baseName, else no good news
-    const nameOfOwned = namesOfOwned[0] ? namesOfOwned[0].id : baseName;
-    return nameOfOwned;
-  }
-
-  getSecondaryOwner(ownerOf: OwnerOf) {
-    if (ownerOf) {
-      return (
-        '<div style="color:orange">' +
-        ownerOf.ownershipPercentage +
-        '% ' +
-        ownerOf.ownershipType +
-        '<div> Owner of: ' +
-        ownerOf.externalCustomerKey +
-        '</div></div>'
-      );
-    }
-    return '';
-  }
-
   onSelect(event: ChartEvent) {
+    console.log('EVENTUX');
+    console.log(event);
     if (event[0] === undefined) {
-      this.orgChartData.owners.map(item =>
+      this.orgChartRemapedData.map(item =>
         document
-          .getElementById(item.id)
+          .getElementById(item.owner.id + item.ownerOf.externalCustomerKey)
           .parentElement.classList.remove(
             'google-visualization-orgchart-nodesel',
           ),
       );
     } else {
-      this.orgChartData.owners.map(owner =>
-        owner.name === this.orgChartData.owners[event[0].row].name
-          ? (document.getElementById(owner.id).parentElement.className +=
+      this.orgChartRemapedData.map(item =>
+        item.owner.name === this.orgChartRemapedData[event[0].row].owner.name
+          ? (document.getElementById(
+              item.owner.id + item.ownerOf.externalCustomerKey,
+            ).parentElement.className +=
               ' google-visualization-orgchart-nodesel')
           : document
-              .getElementById(owner.id)
+              .getElementById(item.owner.id + item.ownerOf.externalCustomerKey)
               .parentElement.classList.remove(
                 'google-visualization-orgchart-nodesel',
               ),
       );
     }
-
+    console.log(this.orgChartRemapedData);
     const selection =
-      event[0] !== undefined ? this.orgChartData.owners[event[0].row].id : null;
+      event[0] !== undefined
+        ? this.orgChartRemapedData[event[0].row].owner.id
+        : null;
+    console.log('SELECTION: ' + selection);
     this.selectedData.emit(selection);
   }
 }
